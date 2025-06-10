@@ -512,7 +512,7 @@
             <h3>📋 How This Works</h3>
             <p><strong>Step 1:</strong> We'll play a note for you to hear<br>
             <strong>Step 2:</strong> Sing that same note back - try to match the pitch exactly<br>
-            <strong>Step 3:</strong> Hold the note steadily at 90%+ accuracy for 1.5 seconds - the tool will automatically detect when you've matched it!<br>
+            <strong>Step 3:</strong> Hold the note steadily at 85%+ accuracy for less than a second - the tool will automatically detect when you've matched it!<br>
             <strong>Step 4:</strong> If you can't match a note comfortably, click "Can't Match This Note"<br>
             <strong>🎵 Just like a guitar tuner!</strong> You'll hear a success beep when you've matched the pitch.</p>
         </div>
@@ -574,7 +574,7 @@
                     <button class="btn btn-success" id="matchedBtn">✅ I Matched It! (Manual Override)</button>
                     <button class="btn btn-warning" id="cantMatchBtn">❌ Can't Match This Note</button>
                     <p style="font-size: 0.9rem; color: #718096; margin-top: 10px;">
-                        💡 <strong>Tip:</strong> The tool will automatically detect when you match the pitch for 1.5 seconds. Use "Manual Override" only if needed!
+                        💡 <strong>Tip:</strong> The tool will automatically detect when you match the pitch for less than a second. Use "Manual Override" only if needed!
                     </p>
                 </div>
             </div>
@@ -639,8 +639,8 @@
                 this.currentNoteName = '--';
                 this.testInProgress = false;
                 this.notesTested = 0;
-                this.accuracyThreshold = 90; // 90% accuracy needed for auto-match
-                this.matchHoldTime = 1500; // 1.5 seconds (much more reasonable!)
+                this.accuracyThreshold = 85; // 85% accuracy needed for auto-match (more encouraging for students!)
+                this.matchHoldTime = 800; // 0.8 seconds (quick and responsive!)
                 this.matchStartTime = null;
                 this.isHoldingMatch = false;
                 this.holdProgress = 0;
@@ -1001,7 +1001,7 @@
                 const now = Tone.now();
                 this.synth.triggerAttackRelease(this.currentTargetNote, '0.2n', now);
                 // Add a nice harmonic
-                const harmonic = this.frequencyToNote(this.currentTargetFreq * 1); // Perfect fifth
+                const harmonic = this.frequencyToNote(this.currentTargetFreq * 1.5); // Perfect fifth
                 if (harmonic) {
                     this.synth.triggerAttackRelease(harmonic, '0.2n', now + 0.1);
                 }
@@ -1126,7 +1126,7 @@
                         stepTitle.textContent = '🔽 Finding Your Lowest Note';
                         stepInstructions.innerHTML = `
                             Listen to the target note, then sing it back as accurately as possible.<br>
-                            <strong>Hold the note steady at 90%+ accuracy for 1.5 seconds</strong> and the tool will automatically move to the next note!<br>
+                            <strong>Hold the note steady at 85%+ accuracy for less than a second</strong> and the tool will automatically move to the next note!<br>
                             If you can't match it or it strains your voice, click "Can't Match This Note".
                         `;
                         currentDirection.textContent = 'Going DOWN (finding lowest note)';
@@ -1138,7 +1138,7 @@
                         stepTitle.textContent = '🔼 Finding Your Highest Note';
                         stepInstructions.innerHTML = `
                             Listen to the target note, then sing it back as accurately as possible.<br>
-                            <strong>Hold the note steady at 90%+ accuracy for 1.5 seconds</strong> and the tool will automatically move to the next note!<br>
+                            <strong>Hold the note steady at 85%+ accuracy for less than a second</strong> and the tool will automatically move to the next note!<br>
                             If you can't match it or it strains your voice, click "Can't Match This Note".
                         `;
                         currentDirection.textContent = 'Going UP (finding highest note)';
