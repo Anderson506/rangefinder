@@ -1089,28 +1089,57 @@
                     return { type: 'Unknown', description: 'Complete the range test to determine your voice type.' };
                 }
 
-                const lowestOctave = parseInt(this.lowestNote.slice(-1));
-                const highestOctave = parseInt(this.highestNote.slice(-1));
-
-                // Voice type classification based on range
-                if (highestOctave >= 5) {
-                    if (lowestOctave <= 3) {
-                        return { type: 'Soprano', description: this.voiceTypes['Soprano'].description };
-                    } else {
-                        return { type: 'Mezzo-Soprano', description: this.voiceTypes['Mezzo-Soprano'].description };
-                    }
-                } else if (highestOctave >= 4) {
-                    if (lowestOctave <= 3) {
-                        return { type: 'Alto', description: this.voiceTypes['Alto'].description };
-                    } else {
-                        return { type: 'Tenor', description: this.voiceTypes['Tenor'].description };
-                    }
-                } else {
-                    if (lowestOctave <= 2) {
-                        return { type: 'Bass', description: this.voiceTypes['Bass'].description };
-                    } else {
+                const lowestFreq = this.noteFrequencies[this.lowestNote];
+                const highestFreq = this.noteFrequencies[this.highestNote];
+                
+                // More accurate voice type classification using actual frequency ranges
+                // Based on typical voice ranges used in choral music
+                
+                // Bass: E2 (82.41) to E4 (329.63) - typical range
+                if (lowestFreq <= 110 && highestFreq <= 392) { // A2 to G4 or lower
+                    return { type: 'Bass', description: this.voiceTypes['Bass'].description };
+                }
+                
+                // Baritone: A2 (110) to A4 (440) - overlaps with bass and tenor
+                if (lowestFreq <= 130.81 && highestFreq <= 523.25) { // C3 to C5 or similar range
+                    // Check if range suggests baritone vs tenor
+                    if (lowestFreq <= 110 || highestFreq <= 440) {
                         return { type: 'Baritone', description: this.voiceTypes['Baritone'].description };
                     }
+                }
+                
+                // Tenor: C3 (130.81) to C5 (523.25) - higher than baritone
+                if (lowestFreq <= 164.81 && highestFreq >= 392 && highestFreq <= 659.25) { // E3 to E5 range
+                    return { type: 'Tenor', description: this.voiceTypes['Tenor'].description };
+                }
+                
+                // Alto: G3 (196) to G5 (783.99) - lower female voice
+                if (lowestFreq <= 246.94 && highestFreq >= 523.25 && highestFreq <= 880) { // B3 to A5 range
+                    return { type: 'Alto', description: this.voiceTypes['Alto'].description };
+                }
+                
+                // Mezzo-Soprano: A3 (220) to A5 (880) - middle female voice
+                if (lowestFreq >= 196 && highestFreq >= 659.25 && highestFreq <= 1046.50) { // G3 to C6 range
+                    return { type: 'Mezzo-Soprano', description: this.voiceTypes['Mezzo-Soprano'].description };
+                }
+                
+                // Soprano: C4 (261.63) to C6 (1046.50) and higher - highest voice
+                if (lowestFreq >= 220 && highestFreq >= 783.99) { // A3 and G5 or higher
+                    return { type: 'Soprano', description: this.voiceTypes['Soprano'].description };
+                }
+                
+                // Fallback logic for edge cases - use the original simple logic as backup
+                const lowestOctave = parseInt(this.lowestNote.slice(-1));
+                const highestOctave = parseInt(this.highestNote.slice(-1));
+                
+                if (highestOctave >= 5) {
+                    return { type: 'Soprano', description: this.voiceTypes['Soprano'].description };
+                } else if (highestOctave >= 4 && lowestOctave >= 3) {
+                    return { type: 'Alto', description: this.voiceTypes['Alto'].description };
+                } else if (lowestOctave <= 2) {
+                    return { type: 'Bass', description: this.voiceTypes['Bass'].description };
+                } else {
+                    return { type: 'Baritone', description: this.voiceTypes['Baritone'].description };
                 }
             }
 
