@@ -508,12 +508,13 @@
             </ul>
         </div>
 
-        <div class="instruction-panel">
+                        <div class="instruction-panel">
             <h3>📋 How This Works</h3>
             <p><strong>Step 1:</strong> We'll play a note for you to hear<br>
             <strong>Step 2:</strong> Sing that same note back - try to match the pitch exactly<br>
-            <strong>Step 3:</strong> Click "I Matched It!" if you can sing it comfortably, or "Can't Match This Note" if you can't<br>
-            <strong>Step 4:</strong> We'll automatically move to the next note (lower or higher) and repeat!</p>
+            <strong>Step 3:</strong> Hold the note steadily at 90%+ accuracy for 3 seconds - the tool will automatically detect when you've matched it!<br>
+            <strong>Step 4:</strong> If you can't match a note comfortably, click "Can't Match This Note"<br>
+            <strong>🎵 Just like a guitar tuner!</strong> You'll hear a success beep when you've matched the pitch.</p>
         </div>
 
         <div class="progress-indicator">
@@ -570,8 +571,11 @@
                 </div>
 
                 <div id="testControls" style="display: none;">
-                    <button class="btn btn-success" id="matchedBtn">✅ I Matched It!</button>
+                    <button class="btn btn-success" id="matchedBtn">✅ I Matched It! (Manual Override)</button>
                     <button class="btn btn-warning" id="cantMatchBtn">❌ Can't Match This Note</button>
+                    <p style="font-size: 0.9rem; color: #718096; margin-top: 10px;">
+                        💡 <strong>Tip:</strong> The tool will automatically detect when you match the pitch for 3 seconds. Use "Manual Override" only if needed!
+                    </p>
                 </div>
             </div>
 
@@ -635,7 +639,11 @@
                 this.currentNoteName = '--';
                 this.testInProgress = false;
                 this.notesTested = 0;
-                this.accuracyThreshold = 70; // Minimum accuracy to consider a "match"
+                this.accuracyThreshold = 90; // 90% accuracy needed for auto-match
+                this.matchHoldTime = 3000; // 3 seconds
+                this.matchStartTime = null;
+                this.isHoldingMatch = false;
+                this.holdProgress = 0;
 
                 // Piano synthesizer for reference notes
                 this.synth = new Tone.Synth({
@@ -897,15 +905,106 @@
                     this.updateAccuracyDisplay(accuracy);
                     this.updateMatchIndicator(accuracy);
                     
+                    // Check for auto-match
+                    this.checkAutoMatch(accuracy);
+                    
                 } else {
                     document.getElementById('currentNote').textContent = '--';
                     document.getElementById('frequencyDisplay').textContent = '-- Hz';
                     this.updateAccuracyDisplay(0);
                     this.updateMatchIndicator(0);
+                    this.resetAutoMatch();
                 }
                 
                 this.updateVisualFeedback();
                 requestAnimationFrame(() => this.detectPitch());
+            }
+
+            checkAutoMatch(accuracy) {
+                if (accuracy >= this.accuracyThreshold) {
+                    if (!this.isHoldingMatch) {
+                        // Start the hold timer
+                        this.isHoldingMatch = true;
+                        this.matchStartTime = Date.now();
+                    } else {
+                        // Update hold progress
+                        const elapsed = Date.now() - this.matchStartTime;
+                        this.holdProgress = Math.min((elapsed / this.matchHoldTime) * 100, 100);
+                        
+                        // Update progress display
+                        this.updateHoldProgress(this.holdProgress);
+                        
+                        // Check if we've held long enough
+                        if (elapsed >= this.matchHoldTime) {
+                            this.autoNoteMatched();
+                        }
+                    }
+                } else {
+                    this.resetAutoMatch();
+                }
+            }
+
+            resetAutoMatch() {
+                this.isHoldingMatch = false;
+                this.matchStartTime = null;
+                this.holdProgress = 0;
+                this.updateHoldProgress(0);
+            }
+
+            updateHoldProgress(progress) {
+                // Update the accuracy bar to show hold progress when above threshold
+                if (progress > 0) {
+                    const accuracyBar = document.getElementById('accuracyBar');
+                    // Add a green overlay to show hold progress
+                    accuracyBar.style.background = `linear-gradient(90deg, #38a169 0%, #38a169 ${progress}%, #48bb78 ${progress}%, #38a169 100%)`;
+                } else {
+                    const accuracyBar = document.getElementById('accuracyBar');
+                    accuracyBar.style.background = 'linear-gradient(90deg, #f56565 0%, #ed8936 25%, #ecc94b 50%, #48bb78 75%, #38a169 100%)';
+                }
+            }
+
+            autoNoteMatched() {
+                // Same logic as manual noteMatched, but with audio feedback
+                this.notesTested++;
+                
+                // Play a success beep
+                this.playSuccessBeep();
+                
+                // Record this note in our range
+                if (this.testDirection === 'down') {
+                    this.lowestNote = this.currentTargetNote;
+                    this.lowestFreq = this.currentTargetFreq;
+                } else if (this.testDirection === 'up') {
+                    this.highestNote = this.currentTargetNote;
+                    this.highestFreq = this.currentTargetFreq;
+                }
+                
+                // Reset auto-match state
+                this.resetAutoMatch();
+                
+                // Move to next note
+                this.moveToNextNote();
+                this.updateInterface();
+                this.updateVisualFeedback();
+                
+                // Auto-play the next note after a short delay
+                setTimeout(() => {
+                    if (this.testInProgress) {
+                        this.playTargetNote();
+                    }
+                }, 1000);
+            }
+
+            async playSuccessBeep() {
+                // Play a pleasant success sound (major chord)
+                await Tone.start();
+                const now = Tone.now();
+                this.synth.triggerAttackRelease(this.currentTargetNote, '0.2n', now);
+                // Add a nice harmonic
+                const harmonic = this.frequencyToNote(this.currentTargetFreq * 1.5); // Perfect fifth
+                if (harmonic) {
+                    this.synth.triggerAttackRelease(harmonic, '0.2n', now + 0.1);
+                }
             }
 
             calculateAccuracy(detected, target) {
@@ -925,14 +1024,26 @@
                 const indicator = document.getElementById('matchIndicator');
                 
                 if (accuracy >= this.accuracyThreshold) {
-                    indicator.className = 'match-indicator good-match';
-                    indicator.textContent = '🎯 Great match! You can click "I Matched It!" now.';
+                    if (this.isHoldingMatch) {
+                        const remaining = Math.ceil((this.matchHoldTime - (Date.now() - this.matchStartTime)) / 1000);
+                        indicator.className = 'match-indicator good-match';
+                        indicator.textContent = `🎯 Perfect! Hold for ${remaining} more seconds...`;
+                    } else {
+                        indicator.className = 'match-indicator good-match';
+                        indicator.textContent = '🎯 Excellent match! Keep singing to lock it in...';
+                    }
+                } else if (accuracy >= 60) {
+                    indicator.className = 'match-indicator poor-match';
+                    indicator.textContent = '📈 Very close! Adjust slightly to match exactly.';
+                    this.resetAutoMatch();
                 } else if (accuracy >= 30) {
                     indicator.className = 'match-indicator poor-match';
                     indicator.textContent = '📈 Getting closer... try to match the pitch exactly.';
+                    this.resetAutoMatch();
                 } else {
                     indicator.className = 'match-indicator no-match';
-                    indicator.textContent = '🎵 Keep trying to match the target note!';
+                    indicator.textContent = '🎵 Listen to the target note and try to match it!';
+                    this.resetAutoMatch();
                 }
             }
 
@@ -1015,7 +1126,7 @@
                         stepTitle.textContent = '🔽 Finding Your Lowest Note';
                         stepInstructions.innerHTML = `
                             Listen to the target note, then sing it back as accurately as possible.<br>
-                            If you can match it comfortably, click "I Matched It!" and we'll go lower.<br>
+                            <strong>Hold the note steady at 90%+ accuracy for 3 seconds</strong> and the tool will automatically move to the next note!<br>
                             If you can't match it or it strains your voice, click "Can't Match This Note".
                         `;
                         currentDirection.textContent = 'Going DOWN (finding lowest note)';
@@ -1027,7 +1138,7 @@
                         stepTitle.textContent = '🔼 Finding Your Highest Note';
                         stepInstructions.innerHTML = `
                             Listen to the target note, then sing it back as accurately as possible.<br>
-                            If you can match it comfortably, click "I Matched It!" and we'll go higher.<br>
+                            <strong>Hold the note steady at 90%+ accuracy for 3 seconds</strong> and the tool will automatically move to the next note!<br>
                             If you can't match it or it strains your voice, click "Can't Match This Note".
                         `;
                         currentDirection.textContent = 'Going UP (finding highest note)';
