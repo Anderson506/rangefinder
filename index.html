@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocal Range Finder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .safety-warning {
+            background: #fff5f5;
+            border: 2px solid #fed7d7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .safety-warning h3 {
+            color: #c53030;
+            margin-top: 0;
+        }
+
+        .instruction-panel {
+            background: #f0fff4;
+            border: 2px solid #c6f6d5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #38a169;
+        }
+
+        .instruction-panel h3 {
+            color: #22543d;
+            margin-top: 0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .visual-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #a0aec0;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #718096;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .range-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .current-note {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4a5568;
+            margin: 10px 0;
+        }
+
+        .frequency-display {
+            font-size: 1.2rem;
+            color: #718096;
+            margin: 10px 0;
+        }
+
+        .range-results {
+            background: #ebf8ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4299e1;
+        }
+
+        .range-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #cbd5e0;
+        }
+
+        .range-item.lowest {
+            border-left: 4px solid #e53e3e;
+        }
+
+        .range-item.highest {
+            border-left: 4px solid #38a169;
+        }
+
+        .range-item.current {
+            border-left: 4px solid #4299e1;
+            background: #f0f9ff;
+        }
+
+        .piano-keyboard {
+            display: flex;
+            margin: 20px 0;
+            height: 150px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .white-key {
+            flex: 1;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .white-key:hover {
+            background: #f7fafc;
+        }
+
+        .white-key.in-range {
+            background: #c6f6d5;
+        }
+
+        .white-key.lowest-note {
+            background: #fed7d7;
+        }
+
+        .white-key.highest-note {
+            background: #d6f5d6;
+        }
+
+        .white-key.current-note {
+            background: #bee3f8;
+            border: 2px solid #4299e1;
+        }
+
+        .black-key {
+            position: absolute;
+            width: 20px;
+            height: 100px;
+            background: #2d3748;
+            border-radius: 0 0 4px 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .black-key:hover {
+            background: #4a5568;
+        }
+
+        .black-key.in-range {
+            background: #38a169;
+        }
+
+        .black-key.lowest-note {
+            background: #e53e3e;
+        }
+
+        .black-key.highest-note {
+            background: #48bb78;
+        }
+
+        .black-key.current-note {
+            background: #4299e1;
+        }
+
+        .voice-type-result {
+            background: #fef5e7;
+            border: 2px solid #f6ad55;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            border-left: 4px solid #ed8936;
+        }
+
+        .voice-type-result h3 {
+            color: #c05621;
+            margin-top: 0;
+        }
+
+        .voice-type-result .voice-type {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #9c4221;
+            margin: 10px 0;
+        }
+
+        .progress-indicator {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .progress-step {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .progress-step.completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .progress-step.active {
+            background: #bee3f8;
+            color: #1a365d;
+        }
+
+        .progress-step.pending {
+            background: #f7fafc;
+            color: #718096;
+        }
+
+        .volume-meter {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78 0%, #f6ad55 50%, #e53e3e 100%);
+            transition: width 0.1s ease;
+            border-radius: 10px;
+        }
+
+        .export-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .staff-canvas {
+            width: 100%;
+            height: 200px;
+            background: white;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .piano-keyboard {
+                height: 120px;
+            }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-ready {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-listening {
+            background: #fed7d7;
+            color: #c53030;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Vocal Range Finder</h1>
+            <p>Discover your singing range safely with real-time feedback!</p>
+        </div>
+
+        <div class="safety-warning">
+            <h3>⚠️ Important Safety Reminders</h3>
+            <ul>
+                <li><strong>Never strain your voice!</strong> If it hurts, stop immediately.</li>
+                <li>Warm up with gentle humming before testing your range</li>
+                <li>Stay hydrated - drink water before and during the test</li>
+                <li>Stop if you feel any pain, hoarseness, or discomfort</li>
+                <li>Your range can change throughout the day - test when rested</li>
+            </ul>
+        </div>
+
+        <div class="instruction-panel">
+            <h3>📋 How to Use This Tool</h3>
+            <p><strong>Step 1:</strong> Click "Start Range Test" to begin<br>
+            <strong>Step 2:</strong> We'll help you find your lowest comfortable note first<br>
+            <strong>Step 3:</strong> Then we'll find your highest comfortable note<br>
+            <strong>Step 4:</strong> Get your results and voice type classification!</p>
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-step" id="step1">1. Setup</div>
+            <div class="progress-step" id="step2">2. Find Low Range</div>
+            <div class="progress-step" id="step3">3. Find High Range</div>
+            <div class="progress-step" id="step4">4. Results</div>
+        </div>
+
+        <div class="main-content">
+            <div class="control-section">
+                <h3>Controls</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" id="startTestBtn">🎤 Start Range Test</button>
+                    <button class="btn btn-danger" id="stopBtn" disabled>⏹️ Stop Test</button>
+                </div>
+
+                <div id="currentStep" class="instruction-panel" style="display: none;">
+                    <h3 id="stepTitle">Ready to Begin</h3>
+                    <p id="stepInstructions">Click "Start Range Test" to begin finding your vocal range.</p>
+                    <div id="stepControls"></div>
+                </div>
+
+                <div class="range-display">
+                    <div class="current-note" id="currentNote">--</div>
+                    <div class="frequency-display" id="frequencyDisplay">-- Hz</div>
+                    <div id="statusIndicator" class="status-indicator status-ready">Ready</div>
+                </div>
+
+                <div class="volume-meter">
+                    <div class="volume-bar" id="volumeBar" style="width: 0%"></div>
+                </div>
+
+                <div class="range-results" id="rangeResults" style="display: none;">
+                    <h3>Your Vocal Range</h3>
+                    <div class="range-item lowest" id="lowestNote">
+                        <span><strong>Lowest Note:</strong></span>
+                        <span id="lowestNoteValue">Not found yet</span>
+                    </div>
+                    <div class="range-item highest" id="highestNote">
+                        <span><strong>Highest Note:</strong></span>
+                        <span id="highestNoteValue">Not found yet</span>
+                    </div>
+                    <div class="range-item">
+                        <span><strong>Total Range:</strong></span>
+                        <span id="totalRange">-- semitones</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visual-section">
+                <h3>Visual Feedback</h3>
+                <canvas id="staffCanvas" class="staff-canvas" width="400" height="200"></canvas>
+                
+                <div class="piano-keyboard" id="pianoKeyboard">
+                    <!-- Piano keys will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="voice-type-result" id="voiceTypeResult" style="display: none;">
+            <h3>🎭 Your Voice Classification</h3>
+            <div class="voice-type" id="voiceType">--</div>
+            <p id="voiceTypeDescription">Complete the range test to see your voice type!</p>
+        </div>
+
+        <div class="export-section" id="exportSection" style="display: none;">
+            <h3>📤 Save Your Results</h3>
+            <p>Export your vocal range results for your choir director or Google Classroom</p>
+            <button class="btn btn-primary" id="copyResultsBtn">📋 Copy Results</button>
+            <button class="btn btn-secondary" id="exportFileBtn">💾 Download Report</button>
+            <div id="copyStatus" style="margin-top: 10px; color: #38a169; font-weight: bold; display: none;">Copied to clipboard!</div>
+        </div>
+    </div>
+
+    <script>
+        class VocalRangeFinder {
+            constructor() {
+                this.audioContext = null;
+                this.microphone = null;
+                this.analyser = null;
+                this.isListening = false;
+                this.currentStep = 'setup';
+                this.lowestNote = null;
+                this.highestNote = null;
+                this.lowestFreq = null;
+                this.highestFreq = null;
+                this.currentFreq = 0;
+                this.currentNoteName = '--';
+                this.testInProgress = false;
+
+                // Piano synthesizer for reference notes
+                this.synth = new Tone.Synth({
+                    oscillator: { type: "triangle" },
+                    envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1.2 }
+                }).toDestination();
+
+                this.noteFrequencies = {
+                    'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78, 'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
+                    'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
+                    'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
+                    'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.25, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77,
+                    'C6': 1046.50, 'C#6': 1108.73, 'D6': 1174.66, 'D#6': 1244.51, 'E6': 1318.51
+                };
+
+                this.voiceTypes = {
+                    'Bass': { low: 'E2', high: 'E4', description: 'Deep, rich voice - the foundation of the choir' },
+                    'Baritone': { low: 'A2', high: 'A4', description: 'Warm, versatile middle voice between bass and tenor' },
+                    'Tenor': { low: 'C3', high: 'C5', description: 'Higher male voice - often carries the melody' },
+                    'Alto': { low: 'G3', high: 'G5', description: 'Lower female voice - rich and warm harmonies' },
+                    'Mezzo-Soprano': { low: 'A3', high: 'A5', description: 'Middle female voice - versatile and expressive' },
+                    'Soprano': { low: 'C4', high: 'C6', description: 'Higher female voice - soaring melodies and harmonies' }
+                };
+
+                this.init();
+            }
+
+            async init() {
+                this.setupEventListeners();
+                this.drawStaff();
+                this.generatePianoKeyboard();
+                this.updateProgressIndicator();
+            }
+
+            setupEventListeners() {
+                document.getElementById('startTestBtn').addEventListener('click', () => this.startRangeTest());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stopTest());
+                document.getElementById('copyResultsBtn').addEventListener('click', () => this.copyResults());
+                document.getElementById('exportFileBtn').addEventListener('click', () => this.exportResults());
+            }
+
+            async startRangeTest() {
+                if (this.testInProgress) return;
+                
+                await Tone.start();
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                    this.setupAudioProcessing(stream);
+                    this.testInProgress = true;
+                    this.currentStep = 'findLow';
+                    this.updateInterface();
+                } catch (error) {
+                    alert('Microphone access error: ' + error.message);
+                }
+            }
+
+            setupAudioProcessing(stream) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.audioContext.state === 'suspended') {
+                    this.audioContext.resume();
+                }
+                this.microphone = this.audioContext.createMediaStreamSource(stream);
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 4096;
+                this.analyser.smoothingTimeConstant = 0.8;
+                this.microphone.connect(this.analyser);
+                this.isListening = true;
+                
+                document.getElementById('statusIndicator').className = 'status-indicator status-listening';
+                document.getElementById('statusIndicator').textContent = 'Listening';
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('startTestBtn').disabled = true;
+                
+                this.detectPitch();
+            }
+
+            stopTest() {
+                this.isListening = false;
+                this.testInProgress = false;
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+                
+                document.getElementById('statusIndicator').className = 'status-indicator status-ready';
+                document.getElementById('statusIndicator').textContent = 'Ready';
+                document.getElementById('stopBtn').disabled = true;
+                document.getElementById('startTestBtn').disabled = false;
+                
+                if (this.lowestNote && this.highestNote) {
+                    this.currentStep = 'results';
+                    this.showResults();
+                } else {
+                    this.currentStep = 'setup';
+                }
+                this.updateInterface();
+            }
+
+            detectPitch() {
+                if (!this.isListening) return;
+                
+                const bufferLength = this.analyser.fftSize;
+                const buffer = new Float32Array(bufferLength);
+                this.analyser.getFloatTimeDomainData(buffer);
+                
+                // Calculate volume for visual feedback
+                const volume = Math.sqrt(buffer.reduce((sum, val) => sum + val * val, 0) / bufferLength);
+                const volumePercent = Math.min(volume * 1000, 100);
+                document.getElementById('volumeBar').style.width = volumePercent + '%';
+                
+                const frequency = this.autoCorrelate(buffer, this.audioContext.sampleRate);
+                
+                if (frequency > 0 && isFinite(frequency) && volume > 0.01) {
+                    this.currentFreq = frequency;
+                    this.currentNoteName = this.frequencyToNote(frequency);
+                    document.getElementById('currentNote').textContent = this.currentNoteName;
+                    document.getElementById('frequencyDisplay').textContent = frequency.toFixed(2) + ' Hz';
+                    
+                    this.updateVisualFeedback();
+                } else {
+                    document.getElementById('currentNote').textContent = '--';
+                    document.getElementById('frequencyDisplay').textContent = '-- Hz';
+                }
+                
+                requestAnimationFrame(() => this.detectPitch());
+            }
+
+            autoCorrelate(buffer, sampleRate) {
+                const SIZE = buffer.length;
+                const rms = Math.sqrt(buffer.reduce((sum, val) => sum + val * val, 0) / SIZE);
+                if (rms < 0.01) return -1;
+
+                let r1 = 0, r2 = SIZE - 1;
+                const thres = 0.2;
+                
+                for (let i = 0; i < SIZE / 2; i++) {
+                    if (Math.abs(buffer[i]) < thres) { r1 = i; break; }
+                }
+                for (let i = 1; i < SIZE / 2; i++) {
+                    if (Math.abs(buffer[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+                }
+                
+                const trimmed = buffer.slice(r1, r2);
+                const c = new Array(trimmed.length).fill(0);
+                
+                for (let i = 0; i < trimmed.length; i++) {
+                    for (let j = 0; j < trimmed.length - i; j++) {
+                        c[i] += trimmed[j] * trimmed[j + i];
+                    }
+                }
+                
+                let d = 0;
+                while (c[d] > c[d + 1]) d++;
+                
+                let maxval = -1, maxpos = -1;
+                for (let i = d; i < trimmed.length; i++) {
+                    if (c[i] > maxval) {
+                        maxval = c[i];
+                        maxpos = i;
+                    }
+                }
+                
+                let T0 = maxpos;
+                if (T0 < 1) return -1;
+                
+                const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+                const a = (x1 - 2 * x2 + x3) / 2;
+                const b = (x3 - x1) / 2;
+                if (a) T0 = T0 - b / (2 * a);
+                
+                return sampleRate / T0;
+            }
+
+            frequencyToNote(frequency) {
+                const A4 = 440;
+                const C0 = A4 * Math.pow(2, -4.75);
+                const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                
+                if (frequency > C0) {
+                    const h = Math.round(12 * Math.log2(frequency / C0));
+                    const octave = Math.floor(h / 12);
+                    const n = h % 12;
+                    return noteNames[n] + octave;
+                }
+                return "";
+            }
+
+            updateInterface() {
+                this.updateProgressIndicator();
+                
+                const currentStepDiv = document.getElementById('currentStep');
+                const stepTitle = document.getElementById('stepTitle');
+                const stepInstructions = document.getElementById('stepInstructions');
+                const stepControls = document.getElementById('stepControls');
+                
+                switch (this.currentStep) {
+                    case 'setup':
+                        currentStepDiv.style.display = 'none';
+                        break;
+                        
+                    case 'findLow':
+                        currentStepDiv.style.display = 'block';
+                        stepTitle.textContent = '🔽 Finding Your Lowest Note';
+                        stepInstructions.innerHTML = `
+                            Sing your lowest comfortable note. Start from a comfortable middle note and gradually go lower.<br>
+                            <strong>Stop if you feel any strain!</strong> When you find your lowest comfortable note, click "Set Lowest Note".
+                        `;
+                        stepControls.innerHTML = '<button class="btn btn-success" onclick="vocalRangeFinder.setLowestNote()">✅ Set Lowest Note</button>';
+                        break;
+                        
+                    case 'findHigh':
+                        currentStepDiv.style.display = 'block';
+                        stepTitle.textContent = '🔼 Finding Your Highest Note';
+                        stepInstructions.innerHTML = `
+                            Now sing your highest comfortable note. Start from your middle range and gradually go higher.<br>
+                            <strong>Stop if you feel any strain!</strong> When you find your highest comfortable note, click "Set Highest Note".
+                        `;
+                        stepControls.innerHTML = '<button class="btn btn-success" onclick="vocalRangeFinder.setHighestNote()">✅ Set Highest Note</button>';
+                        break;
+                        
+                    case 'results':
+                        currentStepDiv.style.display = 'none';
+                        this.showResults();
+                        break;
+                }
+            }
+
+            setLowestNote() {
+                if (this.currentFreq > 0 && this.currentNoteName !== '--') {
+                    this.lowestNote = this.currentNoteName;
+                    this.lowestFreq = this.currentFreq;
+                    document.getElementById('lowestNoteValue').textContent = this.lowestNote;
+                    this.currentStep = 'findHigh';
+                    this.updateInterface();
+                    this.updateVisualFeedback();
+                } else {
+                    alert('Please sing a note first!');
+                }
+            }
+
+            setHighestNote() {
+                if (this.currentFreq > 0 && this.currentNoteName !== '--') {
+                    this.highestNote = this.currentNoteName;
+                    this.highestFreq = this.currentFreq;
+                    document.getElementById('highestNoteValue').textContent = this.highestNote;
+                    this.stopTest();
+                } else {
+                    alert('Please sing a note first!');
+                }
+            }
+
+            showResults() {
+                document.getElementById('rangeResults').style.display = 'block';
+                
+                if (this.lowestNote && this.highestNote) {
+                    const semitones = this.calculateSemitoneRange();
+                    document.getElementById('totalRange').textContent = semitones + ' semitones';
+                    
+                    const voiceType = this.determineVoiceType();
+                    
+                    const voiceTypeResult = document.getElementById('voiceTypeResult');
+                    const voiceTypeDisplay = document.getElementById('voiceType');
+                    const voiceTypeDesc = document.getElementById('voiceTypeDescription');
+                    
+                    voiceTypeResult.style.display = 'block';
+                    voiceTypeDisplay.textContent = voiceType.type;
+                    voiceTypeDesc.textContent = voiceType.description;
+                    
+                    document.getElementById('exportSection').style.display = 'block';
+                }
+                
+                this.updateVisualFeedback();
+            }
+
+            calculateSemitoneRange() {
+                if (!this.lowestFreq || !this.highestFreq) return 0;
+                return Math.round(12 * Math.log2(this.highestFreq / this.lowestFreq));
+            }
+
+            determineVoiceType() {
+                if (!this.lowestNote || !this.highestNote) {
+                    return { type: 'Unknown', description: 'Complete the range test to determine your voice type.' };
+                }
+
+                const lowestOctave = parseInt(this.lowestNote.slice(-1));
+                const highestOctave = parseInt(this.highestNote.slice(-1));
+                const lowestNoteLetter = this.lowestNote.slice(0, -1);
+                const highestNoteLetter = this.highestNote.slice(0, -1);
+
+                // Simple voice type classification based on range
+                if (highestOctave >= 5) {
+                    if (lowestOctave <= 3) {
+                        return { type: 'Soprano', description: this.voiceTypes['Soprano'].description };
+                    } else {
+                        return { type: 'Mezzo-Soprano', description: this.voiceTypes['Mezzo-Soprano'].description };
+                    }
+                } else if (highestOctave >= 4) {
+                    if (lowestOctave <= 3) {
+                        return { type: 'Alto', description: this.voiceTypes['Alto'].description };
+                    } else {
+                        return { type: 'Tenor', description: this.voiceTypes['Tenor'].description };
+                    }
+                } else {
+                    if (lowestOctave <= 2) {
+                        return { type: 'Bass', description: this.voiceTypes['Bass'].description };
+                    } else {
+                        return { type: 'Baritone', description: this.voiceTypes['Baritone'].description };
+                    }
+                }
+            }
+
+            updateProgressIndicator() {
+                const steps = ['step1', 'step2', 'step3', 'step4'];
+                const currentStepIndex = {
+                    'setup': 0,
+                    'findLow': 1,
+                    'findHigh': 2,
+                    'results': 3
+                }[this.currentStep];
+
+                steps.forEach((stepId, index) => {
+                    const element = document.getElementById(stepId);
+                    if (index < currentStepIndex) {
+                        element.className = 'progress-step completed';
+                    } else if (index === currentStepIndex) {
+                        element.className = 'progress-step active';
+                    } else {
+                        element.className = 'progress-step pending';
+                    }
+                });
+            }
+
+            generatePianoKeyboard() {
+                const keyboard = document.getElementById('pianoKeyboard');
+                const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+                const blackKeys = [1, 3, 6, 8, 10]; // Positions for black keys (C#, D#, F#, G#, A#)
+                
+                keyboard.innerHTML = '';
+                
+                // Generate 3 octaves (C3 to B5)
+                for (let octave = 3; octave <= 5; octave++) {
+                    whiteKeys.forEach((note, index) => {
+                        const key = document.createElement('div');
+                        key.className = 'white-key';
+                        key.textContent = note + octave;
+                        key.setAttribute('data-note', note + octave);
+                        key.addEventListener('click', () => this.playReferenceNote(note + octave));
+                        keyboard.appendChild(key);
+                        
+                        // Add black key after this white key if it exists
+                        if (blackKeys.includes(index * 2 + 1) || blackKeys.includes(index * 2 + 2)) {
+                            if (note !== 'E' && note !== 'B') { // No black keys after E and B
+                                const blackKey = document.createElement('div');
+                                blackKey.className = 'black-key';
+                                const blackNoteName = note + '#' + octave;
+                                blackKey.setAttribute('data-note', blackNoteName);
+                                blackKey.addEventListener('click', () => this.playReferenceNote(blackNoteName));
+                                
+                                // Position the black key
+                                const keyWidth = 100 / (whiteKeys.length * 3); // 3 octaves
+                                const position = (octave - 3) * whiteKeys.length + index;
+                                blackKey.style.left = `calc(${(position + 0.7) * keyWidth}% - 10px)`;
+                                
+                                keyboard.appendChild(blackKey);
+                            }
+                        }
+                    });
+                }
+            }
+
+            async playReferenceNote(note) {
+                await Tone.start();
+                this.synth.triggerAttackRelease(note, '0.5n');
+            }
+
+            updateVisualFeedback() {
+                this.updatePianoKeyboard();
+                this.drawStaff();
+            }
+
+            updatePianoKeyboard() {
+                // Reset all keys
+                const allKeys = document.querySelectorAll('.white-key, .black-key');
+                allKeys.forEach(key => {
+                    key.classList.remove('in-range', 'lowest-note', 'highest-note', 'current-note');
+                });
+
+                // Highlight current note
+                if (this.currentNoteName && this.currentNoteName !== '--') {
+                    const currentKey = document.querySelector(`[data-note="${this.currentNoteName}"]`);
+                    if (currentKey) {
+                        currentKey.classList.add('current-note');
+                    }
+                }
+
+                // Highlight range
+                if (this.lowestNote && this.highestNote) {
+                    const lowestKey = document.querySelector(`[data-note="${this.lowestNote}"]`);
+                    const highestKey = document.querySelector(`[data-note="${this.highestNote}"]`);
+                    
+                    if (lowestKey) lowestKey.classList.add('lowest-note');
+                    if (highestKey) highestKey.classList.add('highest-note');
+                    
+                    // Highlight keys in range
+                    const lowestFreq = this.noteFrequencies[this.lowestNote];
+                    const highestFreq = this.noteFrequencies[this.highestNote];
+                    
+                    allKeys.forEach(key => {
+                        const note = key.getAttribute('data-note');
+                        const freq = this.noteFrequencies[note];
+                        if (freq && freq >= lowestFreq && freq <= highestFreq) {
+                            key.classList.add('in-range');
+                        }
+                    });
+                }
+            }
+
+            drawStaff() {
+                const canvas = document.getElementById('staffCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw staff lines
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                
+                // Treble clef staff
+                for (let i = 0; i < 5; i++) {
+                    const y = 40 + i * 10;
+                    ctx.beginPath();
+                    ctx.moveTo(50, y);
+                    ctx.lineTo(350, y);
+                    ctx.stroke();
+                }
+                
+                // Bass clef staff
+                for (let i = 0; i < 5; i++) {
+                    const y = 120 + i * 10;
+                    ctx.beginPath();
+                    ctx.moveTo(50, y);
+                    ctx.lineTo(350, y);
+                    ctx.stroke();
+                }
+                
+                // Draw clefs
+                ctx.font = '30px serif';
+                ctx.fillStyle = '#333';
+                ctx.fillText('𝄞', 55, 70); // Treble clef
+                ctx.fillText('𝄢', 55, 145); // Bass clef
+                
+                // Draw range indicators
+                if (this.lowestNote) {
+                    this.drawNoteOnStaff(ctx, this.lowestNote, 120, '#e53e3e', 'L');
+                }
+                
+                if (this.highestNote) {
+                    this.drawNoteOnStaff(ctx, this.highestNote, 180, '#48bb78', 'H');
+                }
+                
+                if (this.currentNoteName && this.currentNoteName !== '--') {
+                    this.drawNoteOnStaff(ctx, this.currentNoteName, 240, '#4299e1', 'C');
+                }
+            }
+
+            drawNoteOnStaff(ctx, note, x, color, label) {
+                const notePositions = {
+                    'C3': 165, 'D3': 160, 'E3': 155, 'F3': 150, 'G3': 145, 'A3': 140, 'B3': 135,
+                    'C4': 125, 'D4': 120, 'E4': 115, 'F4': 110, 'G4': 105, 'A4': 100, 'B4': 95,
+                    'C5': 85, 'D5': 80, 'E5': 75, 'F5': 70, 'G5': 65, 'A5': 60, 'B5': 55,
+                    'C6': 45, 'D6': 40, 'E6': 35
+                };
+                
+                // Default position if note not in our lookup
+                let y = notePositions[note] || 100;
+                
+                // Draw note
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.ellipse(x, y, 6, 4, 0, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw stem
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (y > 100) {
+                    ctx.moveTo(x + 6, y);
+                    ctx.lineTo(x + 6, y - 25);
+                } else {
+                    ctx.moveTo(x - 6, y);
+                    ctx.lineTo(x - 6, y + 25);
+                }
+                ctx.stroke();
+                
+                // Draw label
+                ctx.fillStyle = color;
+                ctx.font = 'bold 12px sans-serif';
+                ctx.fillText(label, x - 3, y - 15);
+                
+                // Add ledger lines if needed
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                if (y < 40) { // Above treble staff
+                    for (let ledgerY = 30; ledgerY >= y - 5; ledgerY -= 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(x - 10, ledgerY);
+                        ctx.lineTo(x + 10, ledgerY);
+                        ctx.stroke();
+                    }
+                } else if (y > 165) { // Below bass staff
+                    for (let ledgerY = 170; ledgerY <= y + 5; ledgerY += 10) {
+                        ctx.beginPath();
+                        ctx.moveTo(x - 10, ledgerY);
+                        ctx.lineTo(x + 10, ledgerY);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            getResultsText() {
+                const voiceType = this.determineVoiceType();
+                const semitones = this.calculateSemitoneRange();
+                
+                return `Vocal Range Test Results
+Date: ${new Date().toLocaleString()}
+Student Name: ___________________
+
+VOCAL RANGE FINDINGS:
+Lowest Note: ${this.lowestNote || 'Not recorded'}
+Highest Note: ${this.highestNote || 'Not recorded'}
+Total Range: ${semitones} semitones
+Voice Classification: ${voiceType.type}
+
+VOICE TYPE DESCRIPTION:
+${voiceType.description}
+
+RECOMMENDATIONS FOR CHOIR DIRECTOR:
+- Student should be placed in the ${voiceType.type} section
+- Comfortable singing range appears to be ${this.lowestNote} to ${this.highestNote}
+- Continue vocal warm-ups to maintain and potentially expand range
+- Monitor for any signs of vocal strain during rehearsals
+
+NOTES:
+- This is a preliminary assessment
+- Vocal ranges can change with training and development
+- Final voice part assignment should consider musical experience and comfort
+
+Generated by Vocal Range Finder Tool
+For educational use in choir programs`;
+            }
+
+            copyResults() {
+                const resultsText = this.getResultsText();
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(resultsText).then(() => {
+                        const status = document.getElementById('copyStatus');
+                        status.style.display = 'block';
+                        setTimeout(() => { status.style.display = 'none'; }, 2000);
+                    });
+                } else {
+                    // Fallback for older browsers
+                    const textarea = document.createElement('textarea');
+                    textarea.value = resultsText;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    const status = document.getElementById('copyStatus');
+                    status.style.display = 'block';
+                    setTimeout(() => { status.style.display = 'none'; }, 2000);
+                }
+            }
+
+            exportResults() {
+                const resultsText = this.getResultsText();
+                const dataBlob = new Blob([resultsText], {type: 'text/plain'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `vocal-range-results-${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Global variable for onclick handlers
+        let vocalRangeFinder;
+
+        window.addEventListener('load', () => {
+            vocalRangeFinder = new VocalRangeFinder();
+        });
+    </script>
+</body>
+</html>
+                    
