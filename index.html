@@ -1001,7 +1001,7 @@
                 const now = Tone.now();
                 this.synth.triggerAttackRelease(this.currentTargetNote, '0.2n', now);
                 // Add a nice harmonic
-                const harmonic = this.frequencyToNote(this.currentTargetFreq * 1.5); // Perfect fifth
+                const harmonic = this.frequencyToNote(this.currentTargetFreq * 1); // Perfect fifth
                 if (harmonic) {
                     this.synth.triggerAttackRelease(harmonic, '0.2n', now + 0.1);
                 }
