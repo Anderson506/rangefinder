@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocal Range Finder</title>
+    <title>Guided Vocal Range Finder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         body {
@@ -156,15 +156,37 @@
             transform: none;
         }
 
-        .range-display {
-            text-align: center;
+        .target-note-display {
+            background: #ebf8ff;
+            border: 2px solid #bee3f8;
+            border-radius: 10px;
+            padding: 20px;
             margin: 20px 0;
+            text-align: center;
+            border-left: 4px solid #4299e1;
+        }
+
+        .target-note {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin: 10px 0;
+        }
+
+        .current-note-display {
+            background: #f0fff4;
+            border: 2px solid #c6f6d5;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            border-left: 4px solid #38a169;
         }
 
         .current-note {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            color: #4a5568;
+            color: #22543d;
             margin: 10px 0;
         }
 
@@ -174,10 +196,32 @@
             margin: 10px 0;
         }
 
+        .pitch-accuracy {
+            height: 40px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .accuracy-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f56565 0%, #ed8936 25%, #ecc94b 50%, #48bb78 75%, #38a169 100%);
+            border-radius: 20px;
+            transition: width 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
         .range-results {
             background: #ebf8ff;
-            padding: 20px;
+            border: 2px solid #bee3f8;
             border-radius: 10px;
+            padding: 20px;
             margin: 20px 0;
             border-left: 4px solid #4299e1;
         }
@@ -199,11 +243,6 @@
 
         .range-item.highest {
             border-left: 4px solid #38a169;
-        }
-
-        .range-item.current {
-            border-left: 4px solid #4299e1;
-            background: #f0f9ff;
         }
 
         .piano-keyboard {
@@ -245,9 +284,14 @@
             background: #d6f5d6;
         }
 
-        .white-key.current-note {
+        .white-key.target-note {
             background: #bee3f8;
             border: 2px solid #4299e1;
+        }
+
+        .white-key.current-note {
+            background: #d6f5d6;
+            border: 2px solid #38a169;
         }
 
         .black-key {
@@ -276,8 +320,12 @@
             background: #48bb78;
         }
 
-        .black-key.current-note {
+        .black-key.target-note {
             background: #4299e1;
+        }
+
+        .black-key.current-note {
+            background: #38a169;
         }
 
         .voice-type-result {
@@ -364,6 +412,39 @@
             margin: 10px 0;
         }
 
+        .note-counter {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .match-indicator {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .match-indicator.good-match {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .match-indicator.poor-match {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .match-indicator.no-match {
+            background: #f7fafc;
+            color: #718096;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -398,6 +479,11 @@
             animation: pulse 1s infinite;
         }
 
+        .status-playing {
+            background: #bee3f8;
+            color: #1a365d;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
@@ -407,27 +493,27 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 Vocal Range Finder</h1>
-            <p>Discover your singing range safely with real-time feedback!</p>
+            <h1>🎵 Guided Vocal Range Finder</h1>
+            <p>Follow along as we guide you through finding your vocal range note by note!</p>
         </div>
 
         <div class="safety-warning">
             <h3>⚠️ Important Safety Reminders</h3>
             <ul>
-                <li><strong>Never strain your voice!</strong> If it hurts, stop immediately.</li>
-                <li>Warm up with gentle humming before testing your range</li>
+                <li><strong>Never strain your voice!</strong> If it hurts, stop immediately and click "Can't Match This Note"</li>
+                <li>We'll guide you note by note - just listen and try to match each pitch</li>
                 <li>Stay hydrated - drink water before and during the test</li>
                 <li>Stop if you feel any pain, hoarseness, or discomfort</li>
-                <li>Your range can change throughout the day - test when rested</li>
+                <li>If you can't match a note comfortably, that's your limit - don't push further!</li>
             </ul>
         </div>
 
         <div class="instruction-panel">
-            <h3>📋 How to Use This Tool</h3>
-            <p><strong>Step 1:</strong> Click "Start Range Test" to begin<br>
-            <strong>Step 2:</strong> We'll help you find your lowest comfortable note first<br>
-            <strong>Step 3:</strong> Then we'll find your highest comfortable note<br>
-            <strong>Step 4:</strong> Get your results and voice type classification!</p>
+            <h3>📋 How This Works</h3>
+            <p><strong>Step 1:</strong> We'll play a note for you to hear<br>
+            <strong>Step 2:</strong> Sing that same note back - try to match the pitch exactly<br>
+            <strong>Step 3:</strong> Click "I Matched It!" if you can sing it comfortably, or "Can't Match This Note" if you can't<br>
+            <strong>Step 4:</strong> We'll automatically move to the next note (lower or higher) and repeat!</p>
         </div>
 
         <div class="progress-indicator">
@@ -439,43 +525,53 @@
 
         <div class="main-content">
             <div class="control-section">
-                <h3>Controls</h3>
+                <h3>Test Controls</h3>
                 
                 <div style="margin-bottom: 20px;">
                     <button class="btn btn-primary" id="startTestBtn">🎤 Start Range Test</button>
                     <button class="btn btn-danger" id="stopBtn" disabled>⏹️ Stop Test</button>
                 </div>
 
-                <div id="currentStep" class="instruction-panel" style="display: none;">
+                <div id="currentStepPanel" class="instruction-panel" style="display: none;">
                     <h3 id="stepTitle">Ready to Begin</h3>
                     <p id="stepInstructions">Click "Start Range Test" to begin finding your vocal range.</p>
-                    <div id="stepControls"></div>
+                    
+                    <div class="note-counter">
+                        <strong>Current Step:</strong> <span id="currentDirection">--</span><br>
+                        <strong>Notes tested:</strong> <span id="noteCounter">0</span>
+                    </div>
                 </div>
 
-                <div class="range-display">
+                <div class="target-note-display">
+                    <h4>🎹 Target Note to Match</h4>
+                    <div class="target-note" id="targetNote">C4</div>
+                    <button class="btn btn-primary" id="playTargetBtn" disabled>🔊 Play Target Note</button>
+                    <div id="statusIndicator" class="status-indicator status-ready">Ready</div>
+                </div>
+
+                <div class="current-note-display">
+                    <h4>🎤 Your Voice</h4>
                     <div class="current-note" id="currentNote">--</div>
                     <div class="frequency-display" id="frequencyDisplay">-- Hz</div>
-                    <div id="statusIndicator" class="status-indicator status-ready">Ready</div>
+                    
+                    <div class="pitch-accuracy">
+                        <div class="accuracy-bar" id="accuracyBar" style="width: 0%">
+                            <span id="accuracyText">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="match-indicator no-match" id="matchIndicator">
+                        Waiting for you to sing...
+                    </div>
                 </div>
 
                 <div class="volume-meter">
                     <div class="volume-bar" id="volumeBar" style="width: 0%"></div>
                 </div>
 
-                <div class="range-results" id="rangeResults" style="display: none;">
-                    <h3>Your Vocal Range</h3>
-                    <div class="range-item lowest" id="lowestNote">
-                        <span><strong>Lowest Note:</strong></span>
-                        <span id="lowestNoteValue">Not found yet</span>
-                    </div>
-                    <div class="range-item highest" id="highestNote">
-                        <span><strong>Highest Note:</strong></span>
-                        <span id="highestNoteValue">Not found yet</span>
-                    </div>
-                    <div class="range-item">
-                        <span><strong>Total Range:</strong></span>
-                        <span id="totalRange">-- semitones</span>
-                    </div>
+                <div id="testControls" style="display: none;">
+                    <button class="btn btn-success" id="matchedBtn">✅ I Matched It!</button>
+                    <button class="btn btn-warning" id="cantMatchBtn">❌ Can't Match This Note</button>
                 </div>
             </div>
 
@@ -485,6 +581,22 @@
                 
                 <div class="piano-keyboard" id="pianoKeyboard">
                     <!-- Piano keys will be generated by JavaScript -->
+                </div>
+
+                <div class="range-results" id="rangeResults" style="display: none;">
+                    <h3>Your Vocal Range So Far</h3>
+                    <div class="range-item lowest" id="lowestNote">
+                        <span><strong>Lowest Note:</strong></span>
+                        <span id="lowestNoteValue">Testing...</span>
+                    </div>
+                    <div class="range-item highest" id="highestNote">
+                        <span><strong>Highest Note:</strong></span>
+                        <span id="highestNoteValue">Testing...</span>
+                    </div>
+                    <div class="range-item">
+                        <span><strong>Total Range:</strong></span>
+                        <span id="totalRange">-- semitones</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -505,13 +617,16 @@
     </div>
 
     <script>
-        class VocalRangeFinder {
+        class GuidedVocalRangeFinder {
             constructor() {
                 this.audioContext = null;
                 this.microphone = null;
                 this.analyser = null;
                 this.isListening = false;
                 this.currentStep = 'setup';
+                this.testDirection = null; // 'down' or 'up'
+                this.currentTargetNote = 'C4';
+                this.currentTargetFreq = 261.63;
                 this.lowestNote = null;
                 this.highestNote = null;
                 this.lowestFreq = null;
@@ -519,6 +634,8 @@
                 this.currentFreq = 0;
                 this.currentNoteName = '--';
                 this.testInProgress = false;
+                this.notesTested = 0;
+                this.accuracyThreshold = 70; // Minimum accuracy to consider a "match"
 
                 // Piano synthesizer for reference notes
                 this.synth = new Tone.Synth({
@@ -526,12 +643,21 @@
                     envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 1.2 }
                 }).toDestination();
 
+                // Complete chromatic scale from E2 to C6
+                this.chromaticNotes = [
+                    'E2', 'F2', 'F#2', 'G2', 'G#2', 'A2', 'A#2', 'B2',
+                    'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3',
+                    'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4',
+                    'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5', 'A#5', 'B5',
+                    'C6'
+                ];
+
                 this.noteFrequencies = {
-                    'C2': 65.41, 'C#2': 69.30, 'D2': 73.42, 'D#2': 77.78, 'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
+                    'E2': 82.41, 'F2': 87.31, 'F#2': 92.50, 'G2': 98.00, 'G#2': 103.83, 'A2': 110.00, 'A#2': 116.54, 'B2': 123.47,
                     'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81, 'F3': 174.61, 'F#3': 185.00, 'G3': 196.00, 'G#3': 207.65, 'A3': 220.00, 'A#3': 233.08, 'B3': 246.94,
                     'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
                     'C5': 523.25, 'C#5': 554.37, 'D5': 587.33, 'D#5': 622.25, 'E5': 659.25, 'F5': 698.46, 'F#5': 739.99, 'G5': 783.99, 'G#5': 830.61, 'A5': 880.00, 'A#5': 932.33, 'B5': 987.77,
-                    'C6': 1046.50, 'C#6': 1108.73, 'D6': 1174.66, 'D#6': 1244.51, 'E6': 1318.51
+                    'C6': 1046.50
                 };
 
                 this.voiceTypes = {
@@ -551,11 +677,15 @@
                 this.drawStaff();
                 this.generatePianoKeyboard();
                 this.updateProgressIndicator();
+                this.updateVisualFeedback();
             }
 
             setupEventListeners() {
                 document.getElementById('startTestBtn').addEventListener('click', () => this.startRangeTest());
                 document.getElementById('stopBtn').addEventListener('click', () => this.stopTest());
+                document.getElementById('playTargetBtn').addEventListener('click', () => this.playTargetNote());
+                document.getElementById('matchedBtn').addEventListener('click', () => this.noteMatched());
+                document.getElementById('cantMatchBtn').addEventListener('click', () => this.cantMatchNote());
                 document.getElementById('copyResultsBtn').addEventListener('click', () => this.copyResults());
                 document.getElementById('exportFileBtn').addEventListener('click', () => this.exportResults());
             }
@@ -575,7 +705,12 @@
                     this.setupAudioProcessing(stream);
                     this.testInProgress = true;
                     this.currentStep = 'findLow';
+                    this.testDirection = 'down';
+                    this.currentTargetNote = 'C4';
+                    this.currentTargetFreq = this.noteFrequencies[this.currentTargetNote];
+                    this.notesTested = 0;
                     this.updateInterface();
+                    this.playTargetNote();
                 } catch (error) {
                     alert('Microphone access error: ' + error.message);
                 }
@@ -597,6 +732,8 @@
                 document.getElementById('statusIndicator').textContent = 'Listening';
                 document.getElementById('stopBtn').disabled = false;
                 document.getElementById('startTestBtn').disabled = true;
+                document.getElementById('playTargetBtn').disabled = false;
+                document.getElementById('testControls').style.display = 'block';
                 
                 this.detectPitch();
             }
@@ -612,6 +749,8 @@
                 document.getElementById('statusIndicator').textContent = 'Ready';
                 document.getElementById('stopBtn').disabled = true;
                 document.getElementById('startTestBtn').disabled = false;
+                document.getElementById('playTargetBtn').disabled = true;
+                document.getElementById('testControls').style.display = 'none';
                 
                 if (this.lowestNote && this.highestNote) {
                     this.currentStep = 'results';
@@ -620,6 +759,117 @@
                     this.currentStep = 'setup';
                 }
                 this.updateInterface();
+            }
+
+            async playTargetNote() {
+                await Tone.start();
+                
+                const playBtn = document.getElementById('playTargetBtn');
+                const originalText = playBtn.textContent;
+                
+                // Update button and status
+                playBtn.textContent = '🔊 Playing...';
+                playBtn.style.background = '#38a169';
+                document.getElementById('statusIndicator').className = 'status-indicator status-playing';
+                document.getElementById('statusIndicator').textContent = 'Playing Note';
+                
+                // Play the note
+                this.synth.triggerAttackRelease(this.currentTargetNote, '1n');
+                
+                // Reset button after playing
+                setTimeout(() => {
+                    playBtn.textContent = originalText;
+                    playBtn.style.background = '#4299e1';
+                    if (this.isListening) {
+                        document.getElementById('statusIndicator').className = 'status-indicator status-listening';
+                        document.getElementById('statusIndicator').textContent = 'Listening';
+                    }
+                }, 1000);
+            }
+
+            noteMatched() {
+                this.notesTested++;
+                
+                // Record this note in our range
+                if (this.testDirection === 'down') {
+                    this.lowestNote = this.currentTargetNote;
+                    this.lowestFreq = this.currentTargetFreq;
+                } else if (this.testDirection === 'up') {
+                    this.highestNote = this.currentTargetNote;
+                    this.highestFreq = this.currentTargetFreq;
+                }
+                
+                // Move to next note
+                this.moveToNextNote();
+                this.updateInterface();
+                this.updateVisualFeedback();
+                
+                // Auto-play the next note after a short delay
+                setTimeout(() => {
+                    if (this.testInProgress) {
+                        this.playTargetNote();
+                    }
+                }, 500);
+            }
+
+            cantMatchNote() {
+                // Student can't match this note, so we've found their limit
+                if (this.testDirection === 'down') {
+                    // We've found their lowest note (the previous one they could match)
+                    if (this.lowestNote) {
+                        // Switch to finding high range
+                        this.currentStep = 'findHigh';
+                        this.testDirection = 'up';
+                        this.currentTargetNote = 'C4'; // Start from C4 again
+                        this.currentTargetFreq = this.noteFrequencies[this.currentTargetNote];
+                        this.notesTested = 0;
+                        this.updateInterface();
+                        
+                        setTimeout(() => {
+                            if (this.testInProgress) {
+                                this.playTargetNote();
+                            }
+                        }, 1000);
+                    } else {
+                        alert("Let's try starting from a higher note. We'll begin again from C4.");
+                        this.currentTargetNote = 'C4';
+                        this.currentTargetFreq = this.noteFrequencies[this.currentTargetNote];
+                        this.playTargetNote();
+                    }
+                } else if (this.testDirection === 'up') {
+                    // We've found their highest note, test is complete
+                    this.stopTest();
+                }
+            }
+
+            moveToNextNote() {
+                const currentIndex = this.chromaticNotes.indexOf(this.currentTargetNote);
+                
+                if (this.testDirection === 'down') {
+                    // Move down (lower pitch)
+                    const nextIndex = currentIndex - 1;
+                    if (nextIndex >= 0) {
+                        this.currentTargetNote = this.chromaticNotes[nextIndex];
+                        this.currentTargetFreq = this.noteFrequencies[this.currentTargetNote];
+                    } else {
+                        // Reached the bottom of our range
+                        this.cantMatchNote();
+                        return;
+                    }
+                } else if (this.testDirection === 'up') {
+                    // Move up (higher pitch)
+                    const nextIndex = currentIndex + 1;
+                    if (nextIndex < this.chromaticNotes.length) {
+                        this.currentTargetNote = this.chromaticNotes[nextIndex];
+                        this.currentTargetFreq = this.noteFrequencies[this.currentTargetNote];
+                    } else {
+                        // Reached the top of our range
+                        this.cantMatchNote();
+                        return;
+                    }
+                }
+                
+                document.getElementById('targetNote').textContent = this.currentTargetNote;
             }
 
             detectPitch() {
@@ -642,13 +892,48 @@
                     document.getElementById('currentNote').textContent = this.currentNoteName;
                     document.getElementById('frequencyDisplay').textContent = frequency.toFixed(2) + ' Hz';
                     
-                    this.updateVisualFeedback();
+                    // Calculate pitch accuracy
+                    const accuracy = this.calculateAccuracy(frequency, this.currentTargetFreq);
+                    this.updateAccuracyDisplay(accuracy);
+                    this.updateMatchIndicator(accuracy);
+                    
                 } else {
                     document.getElementById('currentNote').textContent = '--';
                     document.getElementById('frequencyDisplay').textContent = '-- Hz';
+                    this.updateAccuracyDisplay(0);
+                    this.updateMatchIndicator(0);
                 }
                 
+                this.updateVisualFeedback();
                 requestAnimationFrame(() => this.detectPitch());
+            }
+
+            calculateAccuracy(detected, target) {
+                const cents = 1200 * Math.log2(detected / target);
+                const accuracy = Math.max(0, 100 - Math.abs(cents) / 2);
+                return Math.min(100, accuracy);
+            }
+
+            updateAccuracyDisplay(accuracy) {
+                const accuracyBar = document.getElementById('accuracyBar');
+                const accuracyText = document.getElementById('accuracyText');
+                accuracyBar.style.width = accuracy + '%';
+                accuracyText.textContent = Math.round(accuracy) + '%';
+            }
+
+            updateMatchIndicator(accuracy) {
+                const indicator = document.getElementById('matchIndicator');
+                
+                if (accuracy >= this.accuracyThreshold) {
+                    indicator.className = 'match-indicator good-match';
+                    indicator.textContent = '🎯 Great match! You can click "I Matched It!" now.';
+                } else if (accuracy >= 30) {
+                    indicator.className = 'match-indicator poor-match';
+                    indicator.textContent = '📈 Getting closer... try to match the pitch exactly.';
+                } else {
+                    indicator.className = 'match-indicator no-match';
+                    indicator.textContent = '🎵 Keep trying to match the target note!';
+                }
             }
 
             autoCorrelate(buffer, sampleRate) {
@@ -714,64 +999,60 @@
             updateInterface() {
                 this.updateProgressIndicator();
                 
-                const currentStepDiv = document.getElementById('currentStep');
+                const currentStepPanel = document.getElementById('currentStepPanel');
                 const stepTitle = document.getElementById('stepTitle');
                 const stepInstructions = document.getElementById('stepInstructions');
-                const stepControls = document.getElementById('stepControls');
+                const currentDirection = document.getElementById('currentDirection');
+                const noteCounter = document.getElementById('noteCounter');
                 
                 switch (this.currentStep) {
                     case 'setup':
-                        currentStepDiv.style.display = 'none';
+                        currentStepPanel.style.display = 'none';
                         break;
                         
                     case 'findLow':
-                        currentStepDiv.style.display = 'block';
+                        currentStepPanel.style.display = 'block';
                         stepTitle.textContent = '🔽 Finding Your Lowest Note';
                         stepInstructions.innerHTML = `
-                            Sing your lowest comfortable note. Start from a comfortable middle note and gradually go lower.<br>
-                            <strong>Stop if you feel any strain!</strong> When you find your lowest comfortable note, click "Set Lowest Note".
+                            Listen to the target note, then sing it back as accurately as possible.<br>
+                            If you can match it comfortably, click "I Matched It!" and we'll go lower.<br>
+                            If you can't match it or it strains your voice, click "Can't Match This Note".
                         `;
-                        stepControls.innerHTML = '<button class="btn btn-success" onclick="vocalRangeFinder.setLowestNote()">✅ Set Lowest Note</button>';
+                        currentDirection.textContent = 'Going DOWN (finding lowest note)';
+                        noteCounter.textContent = this.notesTested;
                         break;
                         
                     case 'findHigh':
-                        currentStepDiv.style.display = 'block';
+                        currentStepPanel.style.display = 'block';
                         stepTitle.textContent = '🔼 Finding Your Highest Note';
                         stepInstructions.innerHTML = `
-                            Now sing your highest comfortable note. Start from your middle range and gradually go higher.<br>
-                            <strong>Stop if you feel any strain!</strong> When you find your highest comfortable note, click "Set Highest Note".
+                            Listen to the target note, then sing it back as accurately as possible.<br>
+                            If you can match it comfortably, click "I Matched It!" and we'll go higher.<br>
+                            If you can't match it or it strains your voice, click "Can't Match This Note".
                         `;
-                        stepControls.innerHTML = '<button class="btn btn-success" onclick="vocalRangeFinder.setHighestNote()">✅ Set Highest Note</button>';
+                        currentDirection.textContent = 'Going UP (finding highest note)';
+                        noteCounter.textContent = this.notesTested;
                         break;
                         
                     case 'results':
-                        currentStepDiv.style.display = 'none';
+                        currentStepPanel.style.display = 'none';
                         this.showResults();
                         break;
                 }
-            }
-
-            setLowestNote() {
-                if (this.currentFreq > 0 && this.currentNoteName !== '--') {
-                    this.lowestNote = this.currentNoteName;
-                    this.lowestFreq = this.currentFreq;
-                    document.getElementById('lowestNoteValue').textContent = this.lowestNote;
-                    this.currentStep = 'findHigh';
-                    this.updateInterface();
-                    this.updateVisualFeedback();
-                } else {
-                    alert('Please sing a note first!');
-                }
-            }
-
-            setHighestNote() {
-                if (this.currentFreq > 0 && this.currentNoteName !== '--') {
-                    this.highestNote = this.currentNoteName;
-                    this.highestFreq = this.currentFreq;
-                    document.getElementById('highestNoteValue').textContent = this.highestNote;
-                    this.stopTest();
-                } else {
-                    alert('Please sing a note first!');
+                
+                // Update target note display
+                document.getElementById('targetNote').textContent = this.currentTargetNote;
+                
+                // Update range results if we have any data
+                if (this.lowestNote || this.highestNote) {
+                    document.getElementById('rangeResults').style.display = 'block';
+                    document.getElementById('lowestNoteValue').textContent = this.lowestNote || 'Still testing...';
+                    document.getElementById('highestNoteValue').textContent = this.highestNote || 'Still testing...';
+                    
+                    if (this.lowestNote && this.highestNote) {
+                        const semitones = this.calculateSemitoneRange();
+                        document.getElementById('totalRange').textContent = semitones + ' semitones';
+                    }
                 }
             }
 
@@ -810,10 +1091,8 @@
 
                 const lowestOctave = parseInt(this.lowestNote.slice(-1));
                 const highestOctave = parseInt(this.highestNote.slice(-1));
-                const lowestNoteLetter = this.lowestNote.slice(0, -1);
-                const highestNoteLetter = this.highestNote.slice(0, -1);
 
-                // Simple voice type classification based on range
+                // Voice type classification based on range
                 if (highestOctave >= 5) {
                     if (lowestOctave <= 3) {
                         return { type: 'Soprano', description: this.voiceTypes['Soprano'].description };
@@ -859,7 +1138,6 @@
             generatePianoKeyboard() {
                 const keyboard = document.getElementById('pianoKeyboard');
                 const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-                const blackKeys = [1, 3, 6, 8, 10]; // Positions for black keys (C#, D#, F#, G#, A#)
                 
                 keyboard.innerHTML = '';
                 
@@ -874,21 +1152,19 @@
                         keyboard.appendChild(key);
                         
                         // Add black key after this white key if it exists
-                        if (blackKeys.includes(index * 2 + 1) || blackKeys.includes(index * 2 + 2)) {
-                            if (note !== 'E' && note !== 'B') { // No black keys after E and B
-                                const blackKey = document.createElement('div');
-                                blackKey.className = 'black-key';
-                                const blackNoteName = note + '#' + octave;
-                                blackKey.setAttribute('data-note', blackNoteName);
-                                blackKey.addEventListener('click', () => this.playReferenceNote(blackNoteName));
-                                
-                                // Position the black key
-                                const keyWidth = 100 / (whiteKeys.length * 3); // 3 octaves
-                                const position = (octave - 3) * whiteKeys.length + index;
-                                blackKey.style.left = `calc(${(position + 0.7) * keyWidth}% - 10px)`;
-                                
-                                keyboard.appendChild(blackKey);
-                            }
+                        if (note !== 'E' && note !== 'B') { // No black keys after E and B
+                            const blackKey = document.createElement('div');
+                            blackKey.className = 'black-key';
+                            const blackNoteName = note + '#' + octave;
+                            blackKey.setAttribute('data-note', blackNoteName);
+                            blackKey.addEventListener('click', () => this.playReferenceNote(blackNoteName));
+                            
+                            // Position the black key
+                            const keyWidth = 100 / (whiteKeys.length * 3); // 3 octaves
+                            const position = (octave - 3) * whiteKeys.length + index;
+                            blackKey.style.left = `calc(${(position + 0.7) * keyWidth}% - 10px)`;
+                            
+                            keyboard.appendChild(blackKey);
                         }
                     });
                 }
@@ -908,10 +1184,16 @@
                 // Reset all keys
                 const allKeys = document.querySelectorAll('.white-key, .black-key');
                 allKeys.forEach(key => {
-                    key.classList.remove('in-range', 'lowest-note', 'highest-note', 'current-note');
+                    key.classList.remove('in-range', 'lowest-note', 'highest-note', 'target-note', 'current-note');
                 });
 
-                // Highlight current note
+                // Highlight target note
+                const targetKey = document.querySelector(`[data-note="${this.currentTargetNote}"]`);
+                if (targetKey) {
+                    targetKey.classList.add('target-note');
+                }
+
+                // Highlight current sung note
                 if (this.currentNoteName && this.currentNoteName !== '--') {
                     const currentKey = document.querySelector(`[data-note="${this.currentNoteName}"]`);
                     if (currentKey) {
@@ -974,30 +1256,34 @@
                 ctx.fillText('𝄞', 55, 70); // Treble clef
                 ctx.fillText('𝄢', 55, 145); // Bass clef
                 
-                // Draw range indicators
-                if (this.lowestNote) {
-                    this.drawNoteOnStaff(ctx, this.lowestNote, 120, '#e53e3e', 'L');
-                }
-                
-                if (this.highestNote) {
-                    this.drawNoteOnStaff(ctx, this.highestNote, 180, '#48bb78', 'H');
+                // Draw notes
+                if (this.currentTargetNote) {
+                    this.drawNoteOnStaff(ctx, this.currentTargetNote, 120, '#4299e1', 'T');
                 }
                 
                 if (this.currentNoteName && this.currentNoteName !== '--') {
-                    this.drawNoteOnStaff(ctx, this.currentNoteName, 240, '#4299e1', 'C');
+                    this.drawNoteOnStaff(ctx, this.currentNoteName, 180, '#38a169', 'Y');
+                }
+                
+                if (this.lowestNote) {
+                    this.drawNoteOnStaff(ctx, this.lowestNote, 240, '#e53e3e', 'L');
+                }
+                
+                if (this.highestNote) {
+                    this.drawNoteOnStaff(ctx, this.highestNote, 300, '#48bb78', 'H');
                 }
             }
 
             drawNoteOnStaff(ctx, note, x, color, label) {
                 const notePositions = {
-                    'C3': 165, 'D3': 160, 'E3': 155, 'F3': 150, 'G3': 145, 'A3': 140, 'B3': 135,
-                    'C4': 125, 'D4': 120, 'E4': 115, 'F4': 110, 'G4': 105, 'A4': 100, 'B4': 95,
-                    'C5': 85, 'D5': 80, 'E5': 75, 'F5': 70, 'G5': 65, 'A5': 60, 'B5': 55,
-                    'C6': 45, 'D6': 40, 'E6': 35
+                    'E2': 175, 'F2': 170, 'F#2': 170, 'G2': 165, 'G#2': 165, 'A2': 160, 'A#2': 160, 'B2': 155,
+                    'C3': 150, 'C#3': 150, 'D3': 145, 'D#3': 145, 'E3': 140, 'F3': 135, 'F#3': 135, 'G3': 130, 'G#3': 130, 'A3': 125, 'A#3': 125, 'B3': 120,
+                    'C4': 100, 'C#4': 100, 'D4': 95, 'D#4': 95, 'E4': 90, 'F4': 85, 'F#4': 85, 'G4': 80, 'G#4': 80, 'A4': 75, 'A#4': 75, 'B4': 70,
+                    'C5': 65, 'C#5': 65, 'D5': 60, 'D#5': 60, 'E5': 55, 'F5': 50, 'F#5': 50, 'G5': 45, 'G#5': 45, 'A5': 40, 'A#5': 40, 'B5': 35,
+                    'C6': 30
                 };
                 
-                // Default position if note not in our lookup
-                let y = notePositions[note] || 100;
+                const y = notePositions[note] || 100;
                 
                 // Draw note
                 ctx.fillStyle = color;
@@ -1041,13 +1327,20 @@
                         ctx.stroke();
                     }
                 }
+                
+                // Draw sharp symbol if needed
+                if (note.includes('#')) {
+                    ctx.font = '16px serif';
+                    ctx.fillStyle = color;
+                    ctx.fillText('♯', x - 25, y + 5);
+                }
             }
 
             getResultsText() {
                 const voiceType = this.determineVoiceType();
                 const semitones = this.calculateSemitoneRange();
                 
-                return `Vocal Range Test Results
+                return `Guided Vocal Range Test Results
 Date: ${new Date().toLocaleString()}
 Student Name: ___________________
 
@@ -1060,18 +1353,26 @@ Voice Classification: ${voiceType.type}
 VOICE TYPE DESCRIPTION:
 ${voiceType.description}
 
+TESTING METHOD:
+- Student followed guided note-by-note progression
+- Each note was played as a reference before student attempted to match
+- Student indicated when they could no longer match pitches comfortably
+- Total notes tested: ${this.notesTested}
+
 RECOMMENDATIONS FOR CHOIR DIRECTOR:
 - Student should be placed in the ${voiceType.type} section
 - Comfortable singing range appears to be ${this.lowestNote} to ${this.highestNote}
+- Student demonstrated ability to match pitches during testing
 - Continue vocal warm-ups to maintain and potentially expand range
 - Monitor for any signs of vocal strain during rehearsals
 
 NOTES:
-- This is a preliminary assessment
+- This is a preliminary assessment using guided pitch matching
 - Vocal ranges can change with training and development
 - Final voice part assignment should consider musical experience and comfort
+- Student showed good pitch recognition during the testing process
 
-Generated by Vocal Range Finder Tool
+Generated by Guided Vocal Range Finder Tool
 For educational use in choir programs`;
             }
 
@@ -1105,7 +1406,7 @@ For educational use in choir programs`;
                 const url = URL.createObjectURL(dataBlob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `vocal-range-results-${new Date().toISOString().split('T')[0]}.txt`;
+                link.download = `guided-vocal-range-results-${new Date().toISOString().split('T')[0]}.txt`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -1113,13 +1414,12 @@ For educational use in choir programs`;
             }
         }
 
-        // Global variable for onclick handlers
-        let vocalRangeFinder;
+        // Global variable for button handlers
+        let guidedVocalRangeFinder;
 
         window.addEventListener('load', () => {
-            vocalRangeFinder = new VocalRangeFinder();
+            guidedVocalRangeFinder = new GuidedVocalRangeFinder();
         });
     </script>
 </body>
 </html>
-                    
